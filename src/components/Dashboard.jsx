@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle2, Circle, Clock } from 'lucide-react';
+import { CheckCircle2, Circle, Clock, MapPin, Users } from 'lucide-react';
 import { KnowledgeGraph } from './KnowledgeGraph';
 
 export const Dashboard = ({ civicTwin, apiKey, onNavigate }) => {
@@ -26,6 +26,27 @@ export const Dashboard = ({ civicTwin, apiKey, onNavigate }) => {
   
   if (completedSteps.includes(1)) mastered.push("Ballot Rules");
   if (completedSteps.includes(2)) mastered.push("Voting Methods");
+
+  // Mock campaigns based on user profile
+  const mockCampaigns = [
+    {
+      title: "Youth Climate Strike",
+      location: `${civicTwin.state} State Capitol`,
+      attendees: 1240,
+      topic: "Environment",
+      date: "This Saturday, 10 AM"
+    },
+    {
+      title: "Townhall: Education Reform",
+      location: "Community Center",
+      attendees: 300,
+      topic: "Education",
+      date: "Next Tuesday, 6 PM"
+    }
+  ];
+
+  // Filter or prioritize based on civicTwin.issues if possible
+  // For now, we'll just show them as "Local Action"
 
   return (
     <motion.div 
@@ -117,6 +138,31 @@ export const Dashboard = ({ civicTwin, apiKey, onNavigate }) => {
         </div>
 
         <KnowledgeGraph masteredTopics={mastered} exploreTopics={toExplore} onNavigate={onNavigate} />
+
+        <div className="glass-panel" style={{ marginTop: '2rem' }}>
+          <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <MapPin size={20} className="text-primary" /> Local Action
+          </h3>
+          <p className="text-muted" style={{ fontSize: '0.85rem', marginBottom: '1rem' }}>
+            Get involved in campaigns near you.
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {mockCampaigns.map((camp, idx) => (
+              <div key={idx} style={{ padding: '1rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '1rem' }}>{camp.title}</h4>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
+                  <span>{camp.date}</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                    <Users size={12} /> {camp.attendees}
+                  </span>
+                </div>
+                <button className="btn btn-outline" style={{ width: '100%', padding: '0.4rem', fontSize: '0.85rem' }} onClick={() => alert("RSVP Confirmed! You earned 50 Civic XP.")}>
+                  RSVP & Join
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </motion.div>
   );

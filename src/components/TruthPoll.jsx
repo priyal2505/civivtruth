@@ -7,6 +7,7 @@ export const TruthPoll = ({ apiKey }) => {
   const [claim, setClaim] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
+  const [isMemeMode, setIsMemeMode] = useState(false);
 
   const handleAnalyze = async () => {
     if (!claim.trim()) return;
@@ -18,8 +19,14 @@ export const TruthPoll = ({ apiKey }) => {
     setLoading(true);
     setResult(null);
 
-    const prompt = `You are "TruthPoll", an expert election fact-checker. 
-    Analyze this claim: "${claim}"
+    const standardPrompt = `You are "TruthPoll", an expert election fact-checker. 
+    Analyze this claim: "${claim}"`;
+    
+    const memePrompt = `You are a "Meme Decoder" for 18-year-old voters. 
+    Analyze this viral phrase, meme description, or Gen-Z slang: "${claim}"
+    Explain what actual political policy or event this meme refers to, then fact-check the underlying claim it is making. Keep the tone accessible but factual.`;
+
+    const prompt = `${isMemeMode ? memePrompt : standardPrompt}
     
     Return ONLY a JSON object with this structure:
     {
@@ -58,8 +65,30 @@ export const TruthPoll = ({ apiKey }) => {
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', width: '100%' }}>
       <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-        <h2 className="text-gradient" style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>TruthPoll</h2>
-        <p className="text-muted">Paste any election claim, tweet, or rumor. AI will instantly analyze it, check facts, and explain the manipulation tactic used.</p>
+        <h2 className="text-gradient" style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>
+          {isMemeMode ? "Meme & Viral Claim Decoder" : "TruthPoll"}
+        </h2>
+        <p className="text-muted">
+          {isMemeMode 
+            ? "Paste a viral TikTok claim, slang, or describe a political meme. AI will decode what policy it actually means and fact-check it." 
+            : "Paste any election claim, tweet, or rumor. AI will instantly analyze it, check facts, and explain the manipulation tactic used."}
+        </p>
+        <div style={{ marginTop: '1rem' }}>
+          <button 
+            className={`btn ${!isMemeMode ? 'btn-primary' : 'btn-outline'}`} 
+            onClick={() => { setIsMemeMode(false); setResult(null); }}
+            style={{ borderRadius: '20px 0 0 20px', padding: '0.4rem 1rem' }}
+          >
+            Fact-Check
+          </button>
+          <button 
+            className={`btn ${isMemeMode ? 'btn-primary' : 'btn-outline'}`} 
+            onClick={() => { setIsMemeMode(true); setResult(null); }}
+            style={{ borderRadius: '0 20px 20px 0', padding: '0.4rem 1rem' }}
+          >
+            Meme Decoder
+          </button>
+        </div>
       </div>
 
       <div className="glass-panel" style={{ marginBottom: '2rem' }}>
@@ -67,7 +96,7 @@ export const TruthPoll = ({ apiKey }) => {
           <textarea 
             className="input-glass"
             rows="4"
-            placeholder="e.g. 'They are changing polling locations at the last minute to prevent us from voting!'"
+            placeholder={isMemeMode ? "e.g. 'They're banning our apps again, literally 1984'" : "e.g. 'They are changing polling locations at the last minute to prevent us from voting!'"}
             value={claim}
             onChange={(e) => setClaim(e.target.value)}
             style={{ paddingRight: '100px', resize: 'none' }}

@@ -4,11 +4,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { generateWithGemini } from '../gemini';
 import { CandidateChat } from './CandidateChat';
 import { PolicySandbox } from './PolicySandbox';
+import { DebatePractice } from './DebatePractice';
 
 export const VoteSimulator = ({ civicTwin, apiKey }) => {
   const [selectedItem, setSelectedItem] = useState(null);
   const [activeTab, setActiveTab] = useState('explain'); // 'explain', 'chat', 'sandbox'
   const [explanation, setExplanation] = useState(null);
+  const [matchData, setMatchData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [readingLevel, setReadingLevel] = useState(civicTwin.readingLevel || 'adult');
 
@@ -63,6 +65,7 @@ export const VoteSimulator = ({ civicTwin, apiKey }) => {
     setSelectedItem(item);
     setActiveTab('explain');
     setExplanation(null);
+    setMatchData(null);
     handleExplain(item);
   };
 
@@ -98,6 +101,41 @@ export const VoteSimulator = ({ civicTwin, apiKey }) => {
     } catch (error) {
       console.error(error);
       alert("Explanation failed. " + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleMatch = async (item) => {
+    if (!apiKey) {
+      alert("Please enter API Key in settings first.");
+      return;
+    }
+
+    setLoading(true);
+    setMatchData(null);
+    setActiveTab('match');
+
+    const prompt = `You are a Candidate Matchmaker. Compare this voter's profile with the candidate.
+    Voter's Top Issues: ${civicTwin.issues || 'General welfare'}
+    
+    Candidate: ${item.title} - ${item.summary}
+    Record: ${item.record}
+    
+    Return ONLY a JSON object with this structure:
+    {
+      "matchScore": 85,
+      "alignmentPoints": ["Point 1 where they agree", "Point 2"],
+      "frictionPoints": ["Point 1 where they disagree"]
+    }`;
+
+    try {
+      const response = await generateWithGemini(prompt, apiKey);
+      const cleanJson = response.replace(/```json/g, '').replace(/```/g, '').trim();
+      setMatchData(JSON.parse(cleanJson));
+    } catch (error) {
+      console.error(error);
+      alert("Match calculation failed. " + error.message);
     } finally {
       setLoading(false);
     }
@@ -185,13 +223,27 @@ export const VoteSimulator = ({ civicTwin, apiKey }) => {
                   <BookOpen size={18} /> Breakdown
                 </button>
                 {selectedItem.type === 'Candidate' && (
-                  <button 
-                    className={`btn ${activeTab === 'chat' ? 'btn-primary' : 'btn-ghost'}`}
-                    onClick={() => setActiveTab('chat')}
-                  >
-                    <MessageSquare size={18} /> Chat with {selectedItem.title.split(' ')[0]}
-                  </button>
+                  <>
+                    <button 
+                      className={`btn ${activeTab === 'chat' ? 'btn-primary' : 'btn-ghost'}`}
+                      onClick={() => setActiveTab('chat')}
+                    >
+                      <MessageSquare size={18} /> Chat with {selectedItem.title.split(' ')[0]}
+                    </button>
+                    <button 
+                      className={`btn ${activeTab === 'match' ? 'btn-primary' : 'btn-ghost'}`}
+                      onClick={() => handleMatch(selectedItem)}
+                    >
+                      <Sparkles size={18} /> Match Score
+                    </button>
+                  </>
                 )}
+                <button 
+                  className={`btn ${activeTab === 'debate' ? 'btn-primary' : 'btn-ghost'}`}
+                  onClick={() => setActiveTab('debate')}
+                >
+                  <Flame size={18} /> Debate Practice
+                </button>
                 {selectedItem.type === 'Measure' && selectedItem.sandbox && (
                   <button 
                     className={`btn ${activeTab === 'sandbox' ? 'btn-primary' : 'btn-ghost'}`}
@@ -262,6 +314,45 @@ export const VoteSimulator = ({ civicTwin, apiKey }) => {
 
               {activeTab === 'chat' && (
                 <CandidateChat candidate={selectedItem} civicTwin={civicTwin} apiKey={apiKey} />
+              )}
+
+              {activeTab === 'match' && (
+                loading ? (
+                  <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                    <Loader2 className="text-primary spin" size={48} />
+                    <p style={{ marginTop: '1rem', color: 'var(--text-muted)' }}>Calculating your alignment...</p>
+                  </div>
+                ) : matchData ? (
+                  <AnimatePresence>
+                    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} style={{ padding: '2rem' }}>
+                      <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                        <div style={{ fontSize: '4rem', fontWeight: 'bold', color: matchData.matchScore > 70 ? 'var(--success)' : matchData.matchScore > 40 ? 'var(--warning)' : 'var(--danger)' }}>
+                          {matchData.matchScore}%
+                        </div>
+                        <h3 className="text-muted">Compatibility Match</h3>
+                      </div>
+                      
+                      <div style={{ display: 'grid', gap: '1rem' }}>
+                        <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '1.5rem', borderRadius: '12px', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                          <h4 style={{ color: 'var(--success)', marginBottom: '1rem' }}>Where you align:</h4>
+                          <ul style={{ paddingLeft: '1.2rem', margin: 0 }}>
+                            {matchData.alignmentPoints.map((p, i) => <li key={i} style={{ marginBottom: '0.5rem' }}>{p}</li>)}
+                          </ul>
+                        </div>
+                        <div style={{ background: 'rgba(239, 68, 68, 0.1)', padding: '1.5rem', borderRadius: '12px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                          <h4 style={{ color: 'var(--danger)', marginBottom: '1rem' }}>Where you differ:</h4>
+                          <ul style={{ paddingLeft: '1.2rem', margin: 0 }}>
+                            {matchData.frictionPoints.map((p, i) => <li key={i} style={{ marginBottom: '0.5rem' }}>{p}</li>)}
+                          </ul>
+                        </div>
+                      </div>
+                    </motion.div>
+                  </AnimatePresence>
+                ) : null
+              )}
+
+              {activeTab === 'debate' && (
+                <DebatePractice item={selectedItem} civicTwin={civicTwin} apiKey={apiKey} />
               )}
 
               {activeTab === 'sandbox' && (
