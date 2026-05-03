@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { CheckCircle2, Circle, Clock } from 'lucide-react';
 import { KnowledgeGraph } from './KnowledgeGraph';
 
-export const Dashboard = ({ civicTwin }) => {
+export const Dashboard = ({ civicTwin, apiKey, onNavigate }) => {
   const [completedSteps, setCompletedSteps] = useState([0]); // First step done by default
 
   const toggleStep = (index) => {
@@ -15,9 +15,9 @@ export const Dashboard = ({ civicTwin }) => {
   };
 
   const steps = civicTwin.upcomingDates || [
-    "Oct 15: Voter Registration Deadline",
-    "Oct 25: Request Mail-in Ballot",
-    "Nov 5: Election Day"
+    "April 19: Phase 1 Voting",
+    "May 25: Phase 6 Voting",
+    "June 4: Election Results"
   ];
 
   // Derived for Knowledge Graph demo
@@ -116,7 +116,7 @@ export const Dashboard = ({ civicTwin }) => {
           </ul>
         </div>
 
-        <KnowledgeGraph masteredTopics={mastered} exploreTopics={toExplore} />
+        <KnowledgeGraph masteredTopics={mastered} exploreTopics={toExplore} onNavigate={onNavigate} />
       </div>
     </motion.div>
   );

@@ -1,7 +1,15 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 
-export const KnowledgeGraph = ({ masteredTopics, exploreTopics }) => {
+export const KnowledgeGraph = ({ masteredTopics, exploreTopics, onNavigate }) => {
+  const handleTopicClick = (topic) => {
+    if (!onNavigate) return;
+    if (topic === "Misinformation Tactics") {
+      onNavigate('truthpoll');
+    } else {
+      onNavigate('simulator');
+    }
+  };
   // A simple visual representation of a node graph using CSS layout
   
   return (
@@ -68,11 +76,13 @@ export const KnowledgeGraph = ({ masteredTopics, exploreTopics }) => {
           const y = Math.sin(angle) * radius;
 
           return (
-            <motion.div
+            <motion.button
               key={topic}
               initial={{ opacity: 0 }}
               animate={{ opacity: 0.6, x, y }}
               transition={{ delay: 1 }}
+              whileHover={{ opacity: 1, scale: 1.05 }}
+              onClick={() => handleTopicClick(topic)}
               style={{
                 position: 'absolute',
                 padding: '0.5rem 1rem',
@@ -80,11 +90,14 @@ export const KnowledgeGraph = ({ masteredTopics, exploreTopics }) => {
                 border: '1px dashed var(--text-muted)',
                 borderRadius: '20px',
                 fontSize: '0.8rem',
-                color: 'var(--text-muted)'
+                color: 'var(--text-muted)',
+                cursor: 'pointer',
+                outline: 'none'
               }}
+              aria-label={`Explore ${topic}`}
             >
               {topic}
-            </motion.div>
+            </motion.button>
           );
         })}
 

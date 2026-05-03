@@ -70,7 +70,7 @@ function App() {
         {!civicTwin || currentView === 'onboarding' ? (
           <Onboarding onComplete={handleProfileComplete} apiKey={apiKey} />
         ) : currentView === 'dashboard' ? (
-          <Dashboard civicTwin={civicTwin} apiKey={apiKey} />
+          <Dashboard civicTwin={civicTwin} apiKey={apiKey} onNavigate={setCurrentView} />
         ) : currentView === 'simulator' ? (
           <VoteSimulator civicTwin={civicTwin} apiKey={apiKey} />
         ) : currentView === 'truthpoll' ? (

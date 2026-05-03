@@ -96,7 +96,7 @@ export const Onboarding = ({ onComplete, apiKey }) => {
                   <input 
                     type="text" 
                     className="input-glass" 
-                    placeholder="e.g. Texas, California, Ohio..." 
+                    placeholder="e.g. Maharashtra, Karnataka, Delhi..." 
                     value={formData.state}
                     onChange={(e) => setFormData({...formData, state: e.target.value})}
                   />
